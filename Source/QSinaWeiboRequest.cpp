@@ -26,10 +26,12 @@
 #include <QtCore/QFile>
 #include <QtCore/QDebug>
 
+#include "QSinaWeiboRequestParam.h"
 #include "QSinaWeiboRequestManager.h"
 
 QSinaWeiboRequest::QSinaWeiboRequest(QObject *parent) :
     QObject(parent),
+    m_isFinished(false),
     m_reply(NULL)
 {
 
@@ -40,88 +42,7 @@ QSinaWeiboRequest::~QSinaWeiboRequest()
     qDeleteAll(m_params);
 }
 
-/*
-QNetworkReply *QSinaWeiboRequest::requestSinaWeiboAPI(const QString &url, const QString &httpMethod, const QMap<QString, QString> &params)
-{
-    QNetworkRequest req;
-    QNetworkReply *reply;
-
-    QString reqUrl = url + "?";
-
-    QList< QString > keys = params.keys();
-    foreach (QString key, keys) {
-        reqUrl = reqUrl.append(key).append("=").append(params.value(key)).append("&");
-    }
-    reqUrl.chop(1);
-
-    req.setUrl(QUrl(reqUrl));
-    if ("Get" == httpMethod) {
-         reply = m_networkAccessManager->get(req);
-    }    
-    else if ("Post" == httpMethod) {
-        reply = m_networkAccessManager->post(req, QByteArray());
-    }
-
-    return reply;
-}
-*/
-
-QNetworkReply *QSinaWeiboRequest::requestSinaWeiboByGet(const QString &url, const QMap<QString, QString> &params)
-{
-    /*
-    QNetworkRequest req;
-    QString reqUrl = url + "?";
-
-    QList< QString > keys = params.keys();
-    foreach (QString key, keys) {
-        reqUrl = reqUrl.append(key).append("=").append(params.value(key)).append("&");
-    }
-    reqUrl.chop(1);
-
-    req.setUrl(QUrl(reqUrl));
-    QNetworkReply *reply = m_networkAccessManager->get(req);
-    */
-    return NULL;
-}
-
-QNetworkReply *QSinaWeiboRequest::requestSinaWeiboByPost(const QString &url, const QMap<QString, QPair<QString, QString> > &params)
-{
-    /*
-    QNetworkRequest req;
-    req.setUrl(url);
-
-    QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
-    QList< QString > keys = params.keys();
-    foreach (QString key, keys) {
-        QPair< QString, QString > valuePair = params.value(key);
-        QString valueType = valuePair.first;
-        QString value = valuePair.second;
-
-        if ( "Var" == valueType ) {
-            QHttpPart varPart;
-            varPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant(QString("form-data; name=\"%1\"").arg(key)));
-            varPart.setBody(value.toUtf8());
-            multiPart->append(varPart);
-        }
-        else if ( "ImageFile" == valueType ) {
-            QHttpPart imagePart;
-            imagePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant(QString("form-data; name=\"%1\"").arg(key)));
-            QFile *file = new QFile(value);
-            file->open(QFile::ReadOnly);
-            imagePart.setBodyDevice(file);
-            file->setParent(multiPart);
-            multiPart->append(imagePart);
-        }
-    }
-
-    QNetworkReply *reply = m_networkAccessManager->post(req, multiPart);
-
-    return reply;
-    */
-    return NULL;
-}
-
-QSinaWeiboRequest *QSinaWeiboRequest::createRequest(const QString &url, const QString &httpMethod, const QMap<QString, QObject *> &params)
+QSinaWeiboRequest *QSinaWeiboRequest::createRequest(const QString &url, const QString &httpMethod, const QList<QSinaWeiboRequestParam *> &params)
 {
     QSinaWeiboRequest *request = new QSinaWeiboRequest;
     request->setUrl(url);
@@ -133,6 +54,28 @@ QSinaWeiboRequest *QSinaWeiboRequest::createRequest(const QString &url, const QS
 void QSinaWeiboRequest::send()
 {
     QSinaWeiboRequestManager *requestManager = QSinaWeiboRequestManager::requetManager();
+    requestManager->requestStarted(this);
+
+    m_isFinished = false;
+
+    serializeURL();
+
+    QNetworkRequest req;
+    req.setUrl(QUrl(m_url));
+
+    if ("GET" == m_httpMethod) {
+        m_reply = requestManager->get(req);
+    }
+    else if ("POST" == m_httpMethod){
+        serializeBodyData();
+        //qDebug() << "post" << req.url().isValid() <<
+        //            req.url().toString();
+        m_reply = requestManager->post(req, m_httpMultiPart);
+    }
+    connect(m_reply, SIGNAL(finished()), this,
+            SLOT(finished()));
+    connect(m_reply, SIGNAL(error(QNetworkReply::NetworkError)), this,
+            SLOT(error()));
 }
 
 void QSinaWeiboRequest::cancel()
@@ -142,6 +85,7 @@ void QSinaWeiboRequest::cancel()
     m_reply->abort();
     m_reply->close();
     m_reply->deleteLater();
+    m_isFinished = true;
 }
 
 void QSinaWeiboRequest::setUrl(const QString &url)
@@ -154,21 +98,76 @@ void QSinaWeiboRequest::setHttpMethod(const QString &httpMehtod)
     m_httpMethod = httpMehtod;
 }
 
-void QSinaWeiboRequest::setParams(const QMap<QString, QObject *> &params)
+void QSinaWeiboRequest::setParams(const QList<QSinaWeiboRequestParam *> &params)
 {
     m_params = params;
 }
 
+bool QSinaWeiboRequest::isFinished() const
+{
+    return m_isFinished;
+}
+
+void QSinaWeiboRequest::taskFinished()
+{
+    m_isFinished = true;
+}
+
 void QSinaWeiboRequest::serializeURL()
 {
+    m_url += "?";
+    foreach (QSinaWeiboRequestParam *param, m_params) {
+        if (param->type() == "Image") {
+            if (m_httpMethod == "GET") {
+                qDebug("can not use GET to upload a file");
+            }
+        }
+        m_url += param->key();
+        m_url += "=";
+        m_url += param->value();
+        m_url += "&";
+    }
+    m_url.chop(1);
+    qDebug() << m_url;
+}
+
+void QSinaWeiboRequest::serializeBodyData()
+{
+    m_httpMultiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+
+    foreach (QSinaWeiboRequestParam *param, m_params) {
+
+        if (param->type() == "Data") {
+            QHttpPart textPart;
+            textPart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("text/plain"));
+            textPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant(QString("form-data; name=\"%1\"").arg(param->key())));
+            textPart.setBody(param->value().toUtf8());
+            m_httpMultiPart->append(textPart);
+        }
+        else if (param->type() == "Image") {
+            QHttpPart imagePart;
+            imagePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("image/jpeg"));
+            imagePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant(QString("form-data; name=\"%1\"").arg(param->key())));
+            QFile *file = new QFile(param->value());
+            file->open(QFile::ReadOnly);
+            imagePart.setBodyDevice(file);
+            file->setParent(m_httpMultiPart);
+            m_httpMultiPart->append(imagePart);
+        }
+    }
 
 }
 
 void QSinaWeiboRequest::finished()
 {
-
+    m_responseData = m_reply->readAll();
+    //m_isFinished = true;
+    emit requestFinished(m_responseData);
 }
 
 void QSinaWeiboRequest::error()
 {
+    QString error = m_reply->errorString();
+    //m_isFinished = true;
+    emit requestFinished(error);
 }

@@ -11,8 +11,8 @@ Rectangle {
 
         transformOrigin: Item.TopLeft
 
-        preferredWidth: parent.width
-        preferredHeight: parent.height
+        preferredWidth: 480//parent.width
+        preferredHeight: 500//parent.height
         contentsScale: 1
         smooth: true
         focus: true
@@ -23,8 +23,21 @@ Rectangle {
             if (urlStr.indexOf("?code=") != -1) {
                 var index = urlStr.indexOf("?code=");
                 var code = urlStr.substring(index + 6);
-                console.debug(code);
+                //console.debug(code);
                 SinaWeibo.requestAccessToken(code);
+            }
+        }
+    }
+
+    Rectangle {
+        anchors.bottom: webView.bottom
+        width: 50
+        height: 50
+        color: "red"
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                webView.url = SinaWeibo.loginUrl;
             }
         }
     }

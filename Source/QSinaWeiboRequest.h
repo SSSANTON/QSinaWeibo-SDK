@@ -20,14 +20,14 @@
 #define QSINAWEIBOREQUEST_H
 
 #include <QtCore/QObject>
-#include <QtCore/QMap>
-#include <QtCore/QPair>
+#include <QtCore/QList>
 #include <QtCore/QMutex>
 #include <QtCore/QUrl>
 
 QT_FORWARD_DECLARE_CLASS(QNetworkRequest)
 QT_FORWARD_DECLARE_CLASS(QNetworkReply)
 QT_FORWARD_DECLARE_CLASS(QHttpMultiPart)
+QT_FORWARD_DECLARE_CLASS(QSinaWeiboRequestParam)
 
 class QSinaWeiboRequest : public QObject
 {
@@ -37,21 +37,21 @@ public:
     explicit QSinaWeiboRequest(QObject *parent = 0);
     ~QSinaWeiboRequest();
 
-    QNetworkReply *requestSinaWeiboByGet(const QString &url,
-                                                const QMap<QString, QString> &params);
-    QNetworkReply *requestSinaWeiboByPost(const QString &url,
-                                                const QMap< QString, QPair< QString, QString > > &params);
-
     static QSinaWeiboRequest *createRequest(const QString &url,
                                             const QString &httpMethod,
-                                            const QMap<QString, QObject *> &params);
+                                            const QList<QSinaWeiboRequestParam *> &params);
 
     void send();
     void cancel();
 
     void setUrl(const QString &url);
     void setHttpMethod(const QString &httpMehtod);
-    void setParams(const QMap<QString, QObject *> &params);
+    void setParams(const QList<QSinaWeiboRequestParam *> &params);
+
+    bool isFinished() const;
+
+public slots:
+    void taskFinished();
 
 signals:
     void requestFinished(const QString &result);
@@ -63,14 +63,16 @@ private slots:
 
 private:
     void serializeURL();
+    void serializeBodyData();
 
 private:
+    bool m_isFinished;
     QString m_url;
     QString m_httpMethod;
-    QMap<QString, QObject *> m_params;
+    QList<QSinaWeiboRequestParam *> m_params;
 
     QNetworkReply *m_reply;
-    QHttpMultiPart *multiPart;
+    QHttpMultiPart *m_httpMultiPart;
 
     QString m_responseData;
 };

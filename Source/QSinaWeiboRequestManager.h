@@ -21,16 +21,17 @@
 
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtCore/QMutex>
-#include <QtCore/QSet>
+#include <QtCore/QList>
 
+QT_FORWARD_DECLARE_CLASS(QTimer)
 QT_FORWARD_DECLARE_CLASS(QSinaWeiboRequest)
 
 class QSinaWeiboRequestManager : public QNetworkAccessManager
 {
     Q_OBJECT
 public:
-    void init();
-    void destroy();
+    static void init();
+    static void destroy();
 
     void requestStarted(QSinaWeiboRequest *request);
     void requestFinished(QSinaWeiboRequest *request);
@@ -41,10 +42,14 @@ private:
     explicit QSinaWeiboRequestManager(QObject *parent = 0);
     ~QSinaWeiboRequestManager();
 
+private slots:
+    void clearFinishedRequest();
+
 private:
     static QSinaWeiboRequestManager *singleRequestManager;
-    QMutex m_mutex;
-    QSet<QSinaWeiboRequest *> m_requestsSet;
+    static QMutex mutex;
+    QList<QSinaWeiboRequest *> m_requestList;
+    QTimer *m_clearTimer;
 };
 
 #endif // QSINAWEIBOREQUESTMANAGER_H

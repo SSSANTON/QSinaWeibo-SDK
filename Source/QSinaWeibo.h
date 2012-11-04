@@ -21,9 +21,10 @@
 
 #include <QObject>
 
-class QNetworkReply;
-class QSinaWeiboRequest;
-class QSinaWeiboRequestManager;
+QT_FORWARD_DECLARE_CLASS(QNetworkReply)
+QT_FORWARD_DECLARE_CLASS(QSinaWeiboRequest)
+QT_FORWARD_DECLARE_CLASS(QSinaWeiboRequestParam)
+QT_FORWARD_DECLARE_CLASS(QSinaWeiboRequestManager)
 
 class QSinaWeibo : public QObject
 {
@@ -45,70 +46,22 @@ public:
     bool isLoggedIn() const;
     bool isAuthorizeExpired() const;
 
-    Q_INVOKABLE void requestAccessToken(const QString &authorizationCode);
+public slots:
+    void requestAccessToken(const QString &authorizationCode);
 
-    Q_INVOKABLE void getPublicTimeline(int count = 20);
+    QSinaWeiboRequest *createSinaWeiboRequest(const QString &url,
+                                            const QString &httpMethod,
+                                            const QVariant &params);
+    QSinaWeiboRequest *createSinaWeiboRequest(const QString &url,
+                                              const QString &httpMethod,
+                                              const QList<QSinaWeiboRequestParam *> &params);
 
-    Q_INVOKABLE void getFriendsTimeline(qint64 sinceId,
-                                        qint64 maxId,
-                                        int count = 20,
-                                        int page = 1,
-                                        int baseApp = 0,
-                                        int feature = 0,
-                                        int trimeUser = 0);
-
-    Q_INVOKABLE void getHomeTimeline(qint64 sinceId,
-                                     qint64 maxId,
-                                     int count = 20,
-                                     int page = 1,
-                                     int baseApp = 0,
-                                     int feature = 0,
-                                     int trimeUser = 0);
-
-    //Q_INVOKABLE void get();
-    Q_INVOKABLE void getFriendsTimelineIds(qint64 sinceId,
-                                           qint64 maxId,
-                                           int count = 20,
-                                           int page = 1,
-                                           int baseApp = 0,
-                                           int feature = 0,
-                                           int trimeUser = 0);
-
-    Q_INVOKABLE void getUserTimeline(const QString &uid,
-                                     const QString &screenName,
-                                     qint64 sinceId,
-                                     qint64 maxId,
-                                     int count = 20,
-                                     int page = 1,
-                                     int baseApp = 0,
-                                     int feature = 0,
-                                     int trimeUser = 0);
-
-    Q_INVOKABLE void getUserTimelineIds(const QString &uid,
-                                     const QString &screenName,
-                                     qint64 sinceId,
-                                     qint64 maxId,
-                                     int count = 20,
-                                     int page = 1,
-                                     int baseApp = 0,
-                                     int feature = 0,
-                                     int trimeUser = 0);
-    Q_INVOKABLE void getRepostTimeline(qint64 id,
-                                       qint64 sinceId,
-                                       qint64 maxId,
-                                       int count = 20,
-                                       int page = 1,
-                                       int baseApp = 0,
-                                       int feature = 0,
-                                       int trimeUser = 0);
 signals:
     void isLoggedInChanged();
     void isAuthorizeExpiredChanged();
-    
-public slots:
 
 private slots:
-    void requestAccessTokenFinished();
+    void requestAccessTokenFinished(const QString &tokenResult);
 
 private:
     QString m_loginUrl;
@@ -116,10 +69,6 @@ private:
     bool m_isLoggedIn;
     bool m_isisAuthorizeExpired;
 
-    //NetworkReply
-    QNetworkReply *m_requestAccessTokenReply;
-    QSinaWeiboRequest *m_sinaWebiboRequest;
-    
 };
 
 #endif // QSINAWEIBO_H

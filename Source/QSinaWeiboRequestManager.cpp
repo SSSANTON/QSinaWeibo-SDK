@@ -18,47 +18,74 @@
 
 #include "QSinaWeiboRequestManager.h"
 
+#include <QtCore/QTimer>
+
 #include "QSinaWeiboRequest.h"
 
 QSinaWeiboRequestManager *QSinaWeiboRequestManager::singleRequestManager = NULL;
+QMutex QSinaWeiboRequestManager::mutex;
 
 QSinaWeiboRequestManager::QSinaWeiboRequestManager(QObject *parent) :
     QNetworkAccessManager(parent)
 {
+    m_clearTimer = new QTimer(this);
+    m_clearTimer->setInterval(10 * 1000);
+    connect(m_clearTimer, SIGNAL(timeout()),
+            SLOT(clearFinishedRequest()));
+    m_clearTimer->start();
 }
 
 QSinaWeiboRequestManager::~QSinaWeiboRequestManager()
 {
-    qDeleteAll(m_requestsSet);
+    qDeleteAll(m_requestList);
+}
+
+void QSinaWeiboRequestManager::clearFinishedRequest()
+{
+    if (m_requestList.isEmpty())
+        return ;
+
+    int i = 5;
+
+    while (i-- && !m_requestList.isEmpty()) {
+        QSinaWeiboRequest *request = m_requestList.takeFirst();
+        if (request->isFinished()) {
+            delete request;
+            request = NULL;
+        }
+        else {
+            m_requestList.append(request);
+        }
+    }
 }
 
 void QSinaWeiboRequestManager::init()
 {
-    m_mutex.lock();
+    mutex.lock();
     if (singleRequestManager == NULL) {
         singleRequestManager = new QSinaWeiboRequestManager;
     }
-    m_mutex.unlock();
+    mutex.unlock();
 }
 
 void QSinaWeiboRequestManager::destroy()
 {
-    m_mutex.lock();
+    mutex.lock();
     if (singleRequestManager) {
         delete singleRequestManager;
         singleRequestManager = NULL;
     }
-    m_mutex.unlock();
+    mutex.unlock();
 }
 
 void QSinaWeiboRequestManager::requestStarted(QSinaWeiboRequest *request)
 {
-    m_requestsSet.insert(request);
+    m_requestList.append(request);
 }
 
 void QSinaWeiboRequestManager::requestFinished(QSinaWeiboRequest *request)
 {
-    m_requestsSet.remove(request);
+    m_requestList.removeOne(request);
     if (request) {
         delete request;
         request = NULL;
