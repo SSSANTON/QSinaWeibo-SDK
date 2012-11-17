@@ -41,9 +41,6 @@ public:
                                             const QString &httpMethod,
                                             const QList<QSinaWeiboRequestParam *> &params);
 
-    void send();
-    void cancel();
-
     void setUrl(const QString &url);
     void setHttpMethod(const QString &httpMehtod);
     void setParams(const QList<QSinaWeiboRequestParam *> &params);
@@ -51,6 +48,8 @@ public:
     bool isFinished() const;
 
 public slots:
+    void send();
+    void cancel();
     void taskFinished();
 
 signals:

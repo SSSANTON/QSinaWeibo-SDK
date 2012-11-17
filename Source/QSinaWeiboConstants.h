@@ -19,18 +19,16 @@
 #ifndef QSINAWEIBOCONSTANTS_H
 #define QSINAWEIBOCONSTANTS_H
 
-#define QSinaWeiboAppKey             "3888915020"
-#define QSinaWeiBoAppSecret          "5d76ceb511497b21fa5e00c618d73c47"
-#define QSinaWeiBoAppRedirectURI     "https://api.weibo.com/oauth2/default.html"
+#define QSinaWeiboSDKOrganization           "Chuck Wang"
+#define QSinaWeiboSDKApplication            "QSinaWeiboSDK"
 
-#define QSinaWeiboSDKErrorDomain           "SinaWeiboSDKErrorDomain"
-#define QSinaWeiboSDKErrorCodeKey          "SinaWeiboSDKErrorCodeKey"
+#define QSinaWeiboSDKErrorDomain            "SinaWeiboSDKErrorDomain"
+#define QSinaWeiboSDKErrorCodeKey           "SinaWeiboSDKErrorCodeKey"
 
-#define QSinaWeiboSDKAPIDomain             "https://open.weibo.cn/2/"
-#define QSinaWeiboSDKOAuth2APIDomain       "https://open.weibo.cn/2/oauth2/"
-#define QSinaWeiboWebAuthURL               "https://open.weibo.cn/2/oauth2/authorize"
-#define QSinaWeiboWebAccessTokenURL        "https://open.weibo.cn/2/oauth2/access_token"
-
+#define QSinaWeiboSDKAPIDomain              "https://open.weibo.cn/2/"
+#define QSinaWeiboSDKOAuth2APIDomain        "https://open.weibo.cn/2/oauth2/"
+#define QSinaWeiboWebAuthURL                "https://open.weibo.cn/2/oauth2/authorize"
+#define QSinaWeiboWebAccessTokenURL         "https://open.weibo.cn/2/oauth2/access_token"
 
 typedef enum
 {

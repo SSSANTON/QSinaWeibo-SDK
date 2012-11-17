@@ -1,14 +1,16 @@
-QT += netwrok
+QT += netwrok script webkit
 
 HEADERS += \
     $$PWD/QSinaWeiboConstants.h \
     $$PWD/QSinaWeibo.h \
     $$PWD/QSinaWeiboRequest.h \
-    ../Source/QSinaWeiboRequestManager.h \
-    ../Source/QSinaWeiboRequestParam.h
+    $$PWD/QSinaWeiboRequestManager.h \
+    $$PWD/QSinaWeiboRequestParam.h \
+    ../Source/QSinaWeiboAuthorizeWidget.h
 
 SOURCES += \
     $$PWD/QSinaWeibo.cpp \
     $$PWD/QSinaWeiboRequest.cpp \
-    ../Source/QSinaWeiboRequestManager.cpp \
-    ../Source/QSinaWeiboRequestParam.cpp
+    $$PWD/QSinaWeiboRequestManager.cpp \
+    $$PWD/QSinaWeiboRequestParam.cpp \
+    ../Source/QSinaWeiboAuthorizeWidget.cpp

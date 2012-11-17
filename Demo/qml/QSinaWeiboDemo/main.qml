@@ -3,9 +3,23 @@ import QtQuick 1.1
 import QtWebKit 1.0
 
 Rectangle {
-    width: 480
-    height: 848
+    width: 500
+    height: 500
 
+    Rectangle {
+        anchors.centerIn: parent
+        width: 50
+        height: 50
+        color: "red"
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                SinaWeibo.logIn();
+            }
+        }
+    }
+
+    /*
     WebView {
         id: webView
 
@@ -41,8 +55,11 @@ Rectangle {
             }
         }
     }
+    */
 
+    /*
     Component.onCompleted: {
         webView.url = SinaWeibo.loginUrl;
     }
+    */
 }

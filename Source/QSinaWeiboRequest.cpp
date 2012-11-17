@@ -161,13 +161,13 @@ void QSinaWeiboRequest::serializeBodyData()
 void QSinaWeiboRequest::finished()
 {
     m_responseData = m_reply->readAll();
-    //m_isFinished = true;
     emit requestFinished(m_responseData);
+    m_isFinished = true;
 }
 
 void QSinaWeiboRequest::error()
 {
     QString error = m_reply->errorString();
-    //m_isFinished = true;
     emit requestFinished(error);
+    m_isFinished = true;
 }

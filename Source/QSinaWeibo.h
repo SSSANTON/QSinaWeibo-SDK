@@ -19,36 +19,50 @@
 #ifndef QSINAWEIBO_H
 #define QSINAWEIBO_H
 
-#include <QObject>
+#include <QtCore/QObject>
+#include <QtCore/QDateTime>
 
 QT_FORWARD_DECLARE_CLASS(QNetworkReply)
 QT_FORWARD_DECLARE_CLASS(QSinaWeiboRequest)
 QT_FORWARD_DECLARE_CLASS(QSinaWeiboRequestParam)
 QT_FORWARD_DECLARE_CLASS(QSinaWeiboRequestManager)
+QT_FORWARD_DECLARE_CLASS(QSinaWeiboAuthorizeWidget)
 
 class QSinaWeibo : public QObject
 {
     Q_OBJECT
+
     Q_PROPERTY(QString loginUrl READ loginUrl)
-    Q_PROPERTY(bool isLoggedIn READ isLoggedIn NOTIFY isLoggedInChanged)
-    Q_PROPERTY(bool isAuthorizeExpired READ isAuthorizeExpired NOTIFY isAuthorizeExpiredChanged)
-    //Q_PROPERTY(QString accessToken READ accessToken WRITE accessToken)
+    Q_PROPERTY(bool isLoggedIn READ isLoggedIn)
+    Q_PROPERTY(bool isAuthorizeExpired READ isAuthorizeExpired )
+    Q_PROPERTY(QString userID READ userID WRITE setUserID NOTIFY userIDChanged)
+    Q_PROPERTY(QString accessToken READ accessToken WRITE setAccessToken NOTIFY accessTokenChanged)
+    Q_PROPERTY(QDateTime expirationDate READ expirationDate WRITE setExpirationDate NOTIFY expirationDateChanged)
 
 public:
-    explicit QSinaWeibo(QObject *parent = 0);
+    explicit QSinaWeibo(const QString &appKey,
+               const QString &appSecret,
+               const QString &appRedirectURI,
+               bool isMobile = true,
+               QObject *parent = 0);
     ~QSinaWeibo();
-
-    //void login();
-    //void logOut();
 
     QString loginUrl() const;
 
+    bool isAuthValid() const;
     bool isLoggedIn() const;
     bool isAuthorizeExpired() const;
 
-public slots:
-    void requestAccessToken(const QString &authorizationCode);
+    QString userID() const;
+    void setUserID(const QString &userID);
 
+    QString accessToken() const;
+    void setAccessToken(const QString &accessToken);
+
+    QDateTime expirationDate() const;
+    void setExpirationDate(const QDateTime &expirationDate);
+
+public slots:
     QSinaWeiboRequest *createSinaWeiboRequest(const QString &url,
                                             const QString &httpMethod,
                                             const QVariant &params);
@@ -56,19 +70,46 @@ public slots:
                                               const QString &httpMethod,
                                               const QList<QSinaWeiboRequestParam *> &params);
 
+    void requestAccessToken(const QString &code);
+
+    void logIn();
+    void logOut();
+
 signals:
-    void isLoggedInChanged();
-    void isAuthorizeExpiredChanged();
+    void authorizeExpired();
+
+    void userIDChanged();
+    void accessTokenChanged();
+    void expirationDateChanged();
+
+    void loginSuccess(const QString &userID,
+                      const QString &accessToken,
+                      const QString &expirationDateString);
+
+    void loginFailed();
+
+    void logOutSuccess();
 
 private slots:
     void requestAccessTokenFinished(const QString &tokenResult);
 
 private:
+    QString m_appKey;
+    QString m_appSecret;
+    QString m_appRedirectURI;
+
+    bool m_isMobile;
+
     QString m_loginUrl;
+
+    QString m_userID;
+    QString m_accessToken;
+    QDateTime m_expirationDate;
 
     bool m_isLoggedIn;
     bool m_isisAuthorizeExpired;
 
+    QSinaWeiboAuthorizeWidget *m_sinaWeiboAuthorizeWidget;
 };
 
 #endif // QSINAWEIBO_H
